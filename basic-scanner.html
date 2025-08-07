@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetooth Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .scan-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .filter-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .filter-section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .status.scanning {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .devices {
+            padding: 30px;
+        }
+
+        .devices h2 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .device-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .device-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .device-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .device-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .device-id {
+            font-family: monospace;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .device-rssi {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .device-data {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #495057;
+            word-break: break-all;
+        }
+
+        .no-devices {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Bluetooth Scanner</h1>
+            <p>Scan for nearby Bluetooth devices and filter advertisements</p>
+        </div>
+
+        <div class="controls">
+            <div class="scan-controls">
+                <button id="scanButton" class="btn btn-primary">
+                    <span id="scanIcon">🔍</span>
+                    <span id="scanText">Start Scan</span>
+                </button>
+                <button id="stopButton" class="btn btn-secondary" disabled>
+                    ⏹️ Stop Scan
+                </button>
+                <button id="clearButton" class="btn btn-secondary">
+                    🗑️ Clear Results
+                </button>
+            </div>
+
+            <div class="filter-section">
+                <h3>🔧 Filter Settings</h3>
+                <input type="text" id="nameFilter" class="filter-input" placeholder="Filter by device name (optional)">
+                <input type="text" id="dataFilter" class="filter-input" placeholder="Filter by advertisement data (optional)">
+                <div>
+                    <label>
+                        <input type="checkbox" id="showAllDevices" checked>
+                        Show all devices (not just filtered ones)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+
+        <div class="devices">
+            <h2>📱 Discovered Devices</h2>
+            <div id="deviceList" class="device-list">
+                <div class="no-devices">No devices discovered yet. Click "Start Scan" to begin.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BluetoothScanner {
+            constructor() {
+                this.isScanning = false;
+                this.devices = new Map();
+                this.scanTimeout = null;
+                this.scanDuration = 5000; // 5 seconds default
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.scanButton = document.getElementById('scanButton');
+                this.stopButton = document.getElementById('stopButton');
+                this.clearButton = document.getElementById('clearButton');
+                this.statusDiv = document.getElementById('status');
+                this.deviceList = document.getElementById('deviceList');
+                this.nameFilter = document.getElementById('nameFilter');
+                this.dataFilter = document.getElementById('dataFilter');
+                this.showAllDevices = document.getElementById('showAllDevices');
+            }
+
+            bindEvents() {
+                this.scanButton.addEventListener('click', () => this.startScan());
+                this.stopButton.addEventListener('click', () => this.stopScan());
+                this.clearButton.addEventListener('click', () => this.clearResults());
+                
+                // Real-time filtering
+                this.nameFilter.addEventListener('input', () => this.updateDisplay());
+                this.dataFilter.addEventListener('input', () => this.updateDisplay());
+                this.showAllDevices.addEventListener('change', () => this.updateDisplay());
+            }
+
+            async startScan() {
+                if (!navigator.bluetooth) {
+                    this.showStatus('Bluetooth is not supported in this browser', 'error');
+                    return;
+                }
+
+                try {
+                    this.isScanning = true;
+                    this.updateUI();
+                    this.showStatus('Scanning for Bluetooth devices...', 'scanning');
+
+                    // Request Bluetooth device with specific filters
+                    const device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: ['generic_access']
+                    });
+
+                    // Start scanning for advertisements
+                    await this.scanForAdvertisements();
+                    
+                } catch (error) {
+                    console.error('Bluetooth error:', error);
+                    this.showStatus(`Bluetooth error: ${error.message}`, 'error');
+                    this.stopScan();
+                }
+            }
+
+            async scanForAdvertisements() {
+                try {
+                    // Use the Web Bluetooth API to scan for advertisements
+                    // Note: This is a simplified approach. In a real implementation,
+                    // you might need to use the Web Bluetooth Scanning API
+                    
+                    // For demonstration, we'll simulate finding devices
+                    this.simulateDeviceDiscovery();
+                    
+                    // Set timeout to stop scanning
+                    this.scanTimeout = setTimeout(() => {
+                        this.stopScan();
+                    }, this.scanDuration);
+
+                } catch (error) {
+                    console.error('Scanning error:', error);
+                    this.showStatus(`Scanning error: ${error.message}`, 'error');
+                    this.stopScan();
+                }
+            }
+
+            simulateDeviceDiscovery() {
+                // Simulate finding devices for demonstration
+                const mockDevices = [
+                    {
+                        id: 'device-1',
+                        name: 'iPhone 13',
+                        rssi: -45,
+                        data: '0201061AFF4C000215E2C56DB5DFFB48D2B060D0F5A71096AA'
+                    },
+                    {
+                        id: 'device-2',
+                        name: 'Samsung Galaxy',
+                        rssi: -52,
+                        data: '0201061AFF4C000215E2C56DB5DFFB48D2B060D0F5A71096BB'
+                    },
+                    {
+                        id: 'device-3',
+                        name: 'MacBook Pro',
+                        rssi: -38,
+                        data: '0201061AFF4C000215E2C56DB5DFFB48D2B060D0F5A71096CC'
+                    },
+                    {
+                        id: 'device-4',
+                        name: 'Unknown Device',
+                        rssi: -65,
+                        data: '0201061AFF4C000215E2C56DB5DFFB48D2B060D0F5A71096DD'
+                    }
+                ];
+
+                mockDevices.forEach((device, index) => {
+                    setTimeout(() => {
+                        this.addDevice(device);
+                    }, index * 500); // Add devices with delay for realistic effect
+                });
+            }
+
+            addDevice(deviceInfo) {
+                const deviceId = deviceInfo.id;
+                
+                // Check if device matches filters
+                const matchesFilter = this.deviceMatchesFilter(deviceInfo);
+                
+                if (matchesFilter || this.showAllDevices.checked) {
+                    this.devices.set(deviceId, deviceInfo);
+                    this.updateDisplay();
+                }
+            }
+
+            deviceMatchesFilter(device) {
+                const nameFilter = this.nameFilter.value.toLowerCase();
+                const dataFilter = this.dataFilter.value.toLowerCase();
+                
+                const nameMatches = !nameFilter || 
+                    (device.name && device.name.toLowerCase().includes(nameFilter));
+                const dataMatches = !dataFilter || 
+                    (device.data && device.data.toLowerCase().includes(dataFilter));
+                
+                return nameMatches && dataMatches;
+            }
+
+            updateDisplay() {
+                const filteredDevices = Array.from(this.devices.values())
+                    .filter(device => this.deviceMatchesFilter(device));
+
+                if (filteredDevices.length === 0) {
+                    this.deviceList.innerHTML = '<div class="no-devices">No devices match the current filters.</div>';
+                    return;
+                }
+
+                this.deviceList.innerHTML = filteredDevices
+                    .map(device => this.createDeviceCard(device))
+                    .join('');
+            }
+
+            createDeviceCard(device) {
+                return `
+                    <div class="device-card">
+                        <div class="device-name">${device.name || 'Unknown Device'}</div>
+                        <div class="device-id">ID: ${device.id}</div>
+                        <div class="device-rssi">RSSI: ${device.rssi} dBm</div>
+                        <div class="device-data">${device.data}</div>
+                    </div>
+                `;
+            }
+
+            stopScan() {
+                this.isScanning = false;
+                if (this.scanTimeout) {
+                    clearTimeout(this.scanTimeout);
+                    this.scanTimeout = null;
+                }
+                this.updateUI();
+                this.showStatus('Scan stopped', 'info');
+            }
+
+            clearResults() {
+                this.devices.clear();
+                this.updateDisplay();
+                this.showStatus('Results cleared', 'info');
+            }
+
+            updateUI() {
+                const scanIcon = document.getElementById('scanIcon');
+                const scanText = document.getElementById('scanText');
+                
+                if (this.isScanning) {
+                    this.scanButton.disabled = true;
+                    this.stopButton.disabled = false;
+                    scanIcon.innerHTML = '<div class="spinner"></div>';
+                    scanText.textContent = 'Scanning...';
+                } else {
+                    this.scanButton.disabled = false;
+                    this.stopButton.disabled = true;
+                    scanIcon.textContent = '🔍';
+                    scanText.textContent = 'Start Scan';
+                }
+            }
+
+            showStatus(message, type) {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+                this.statusDiv.classList.remove('hidden');
+                
+                // Auto-hide info messages after 3 seconds
+                if (type === 'info') {
+                    setTimeout(() => {
+                        this.statusDiv.classList.add('hidden');
+                    }, 3000);
+                }
+            }
+        }
+
+        // Initialize the scanner when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new BluetoothScanner();
+        });
+    </script>
+</body>
+</html> 

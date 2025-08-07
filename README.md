@@ -13,7 +13,8 @@ A modern web application for scanning Bluetooth devices and capturing advertisem
 
 ## Files
 
-- `index.html` - Basic Bluetooth scanner with simulated device discovery
+- `index.html` - **Default BLE Advertisement Scanner** - Scans for BLE advertisements without pairing
+- `basic-scanner.html` - Basic Bluetooth scanner with simulated device discovery
 - `bluetooth-scanner.html` - Advanced scanner with more features and real Web Bluetooth API integration
 
 ## Browser Requirements
@@ -28,16 +29,21 @@ This application requires a browser that supports the Web Bluetooth API:
 
 ## Usage
 
-### Basic Scanner (`index.html`)
+### BLE Advertisement Scanner (`index.html`) - **Default**
 
 1. Open `index.html` in a supported browser
-2. Click "Start Scan" to begin scanning
+2. Click "Start BLE Scan" to begin scanning for advertisements
 3. Use the filter inputs to narrow down results:
-   - **Name Filter**: Filter devices by their name
-   - **Data Filter**: Filter devices by advertisement data content
+   - **Name Filter**: Filter devices by their name (supports `*` wildcards, e.g. `iPhone*`)
+   - **Data Filter**: Filter devices by advertisement data content (supports `*` wildcards)
 4. Toggle "Show all devices" to display unfiltered results
 5. Click "Stop Scan" to end the scanning process
 6. Use "Clear Results" to reset the device list
+
+**Wildcard Filtering**: Use `*` as a wildcard character:
+- `iPhone*` matches "iPhone 13", "iPhone 14", etc.
+- `*Galaxy*` matches "Samsung Galaxy", "Galaxy Tab", etc.
+- `*BLE*` matches any device name containing "BLE"
 
 ### Advanced Scanner (`bluetooth-scanner.html`)
 
@@ -63,8 +69,9 @@ This application requires a browser that supports the Web Bluetooth API:
 
 ### Filtering Options
 
-- **Name Filter**: Search for devices by their name (case-insensitive)
-- **Data Filter**: Search within the advertisement data (case-insensitive)
+- **Name Filter**: Search for devices by their name with wildcard support (case-insensitive)
+  - Use `*` as wildcard: `iPhone*`, `*Galaxy*`, `*BLE*`
+- **Data Filter**: Search within the advertisement data with wildcard support (case-insensitive)
 - **Show All Devices**: When unchecked, only shows devices matching filters
 
 ### Scan Settings
